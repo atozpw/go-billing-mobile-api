@@ -1,0 +1,4 @@
+.env
+/storages/logs
+/storages/public
+go-billing-*
