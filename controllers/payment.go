@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/atozpw/go-billing-mobile-api/configs"
+	"github.com/atozpw/go-billing-mobile-api/helpers"
 	"github.com/atozpw/go-billing-mobile-api/models"
 	"github.com/gin-gonic/gin"
 )
@@ -63,13 +64,43 @@ func PaymentStore(c *gin.Context) {
 		return
 	}
 
+	authId := helpers.AuthSession(c.GetHeader("Authorization"))
 	trxDate := time.Now().Format("2006-01-02 15:04:05")
+	clientIp := c.ClientIP()
+
+	tx := configs.DB.Begin()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
+			Code:    500,
+			Message: "Terjadi kesalahan saat menyimpan Pembayaran",
+		})
+		return
+	}
 
 	for i := 0; i < len(body.Bills); i++ {
 
-		result := configs.DB.Exec("INSERT INTO tm_pembayaran (byr_no, byr_tgl, byr_serial, rek_nomor, kar_id, lok_ip, byr_loket, byr_total, byr_cetak, byr_upd_sts, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, 1, body.Bills[i].Id, "test", c.ClientIP(), "N", body.Amount, 0, trxDate, 1)
+		payment := tx.Exec("INSERT INTO tm_pembayaran (byr_no, byr_tgl, byr_serial, rek_nomor, kar_id, lok_ip, byr_loket, byr_total, byr_cetak, byr_upd_sts, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, 1, body.Bills[i].Id, authId, clientIp, "N", body.Bills[i].Amount, 0, trxDate, 1)
 
-		if result.Error != nil {
+		if payment.Error != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
+				Code:    500,
+				Message: "Terjadi kesalahan saat menyimpan Pembayaran",
+			})
+			return
+		}
+
+		bill := tx.Exec("UPDATE tm_rekening SET rek_byr_sts = 1 WHERE rek_nomor = ? AND rek_sts = 1 AND rek_byr_sts = 0", body.Bills[i].Id)
+
+		if bill.Error != nil {
+			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
 				Code:    500,
 				Message: "Terjadi kesalahan saat menyimpan Pembayaran",
@@ -78,6 +109,8 @@ func PaymentStore(c *gin.Context) {
 		}
 
 	}
+
+	tx.Commit()
 
 	c.JSON(http.StatusOK, models.ResponseWithData{
 		Code:    200,
