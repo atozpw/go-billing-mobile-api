@@ -44,7 +44,7 @@ func PaymentIndex(c *gin.Context) {
 
 func PaymentStore(c *gin.Context) {
 
-	type bill struct {
+	type Bill struct {
 		Id     string
 		Amount string
 	}
@@ -53,7 +53,7 @@ func PaymentStore(c *gin.Context) {
 		Id     string
 		Amount string
 		UserId string
-		Bills  []bill
+		Bills  []Bill
 	}
 
 	if c.Bind(&body) != nil {
@@ -65,8 +65,16 @@ func PaymentStore(c *gin.Context) {
 	}
 
 	authId := helpers.AuthSession(c.GetHeader("Authorization"))
+
+	var sysParam struct {
+		SysValue1 int
+	}
+
+	configs.DB.Raw("SELECT sys_value1 FROM system_parameter WHERE sys_param = 'RESI' AND sys_value = ?", authId).Scan(&sysParam)
+
 	trxDate := time.Now().Format("2006-01-02 15:04:05")
 	clientIp := c.ClientIP()
+	trxSerial := sysParam.SysValue1
 
 	tx := configs.DB.Begin()
 
@@ -86,7 +94,7 @@ func PaymentStore(c *gin.Context) {
 
 	for i := 0; i < len(body.Bills); i++ {
 
-		payment := tx.Exec("INSERT INTO tm_pembayaran (byr_no, byr_tgl, byr_serial, rek_nomor, kar_id, lok_ip, byr_loket, byr_total, byr_cetak, byr_upd_sts, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, 1, body.Bills[i].Id, authId, clientIp, "N", body.Bills[i].Amount, 0, trxDate, 1)
+		payment := tx.Exec("INSERT INTO tm_pembayaran (byr_no, byr_tgl, byr_serial, rek_nomor, kar_id, lok_ip, byr_loket, byr_total, byr_cetak, byr_upd_sts, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, trxSerial, body.Bills[i].Id, authId, clientIp, "N", body.Bills[i].Amount, 0, trxDate, 1)
 
 		if payment.Error != nil {
 			tx.Rollback()
@@ -108,6 +116,19 @@ func PaymentStore(c *gin.Context) {
 			return
 		}
 
+		trxSerial++
+
+	}
+
+	param := tx.Exec("UPDATE system_parameter SET sys_value1 = ? WHERE sys_param = 'RESI' AND sys_value = ?", trxSerial, authId)
+
+	if param.Error != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
+			Code:    500,
+			Message: "Terjadi kesalahan saat menyimpan Pembayaran",
+		})
+		return
 	}
 
 	tx.Commit()
