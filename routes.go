@@ -18,6 +18,7 @@ func Routes(router *gin.Engine) {
 		v1.POST("/payments", controllers.PaymentStore)
 		v1.GET("/profile", controllers.Profile)
 		v1.POST("/change-password", controllers.ChangePassword)
+		v1.POST("/receipt/whatsapp", controllers.ReceiptToWhatsapp)
 		v1.Static("/storage", "./storages/public")
 	}
 
