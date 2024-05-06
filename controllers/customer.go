@@ -8,6 +8,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func CustomerIndex(c *gin.Context) {
+
+	var customer []struct {
+		PelNo     string `json:"id"`
+		PelNama   string `json:"name"`
+		PelAlamat string `json:"address"`
+	}
+
+	if len(c.Query("search")) < 3 {
+		c.JSON(http.StatusBadRequest, models.ResponseOnlyMessage{
+			Code:    400,
+			Message: "Parameter kurang dari 3 digit",
+		})
+		return
+	}
+
+	search := "%" + c.Query("search") + "%"
+
+	result := configs.DB.Raw("SELECT pel_no, pel_nama, pel_alamat FROM tm_pelanggan WHERE pel_no LIKE ? OR pel_nama LIKE ?", search, search).Scan(&customer)
+
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, models.ResponseWithData{
+			Code:    404,
+			Message: "Data tidak ditemukan",
+			Data:    []int{},
+		})
+	} else {
+		c.JSON(http.StatusOK, models.ResponseWithData{
+			Code:    200,
+			Message: "Data Pelanggan",
+			Data:    customer,
+		})
+	}
+
+}
+
 func CustomerFind(c *gin.Context) {
 
 	var customer struct {
@@ -35,6 +71,7 @@ func CustomerFind(c *gin.Context) {
 			Data:    customer,
 		})
 	}
+
 }
 
 func CustomerBills(c *gin.Context) {
@@ -68,4 +105,5 @@ func CustomerBills(c *gin.Context) {
 			Data:    bills,
 		})
 	}
+
 }
