@@ -10,6 +10,20 @@ import (
 	"github.com/go-pdf/fpdf"
 )
 
+func TestReceipt(c *gin.Context) {
+	pdf := fpdf.New("L", "mm", "A5", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.CellFormat(0, 0, "Bukti Pembayaran", "", 1, "C", false, 0, "")
+	pdf.Ln(10)
+	pdf.SetFont("Arial", "", 9)
+	pdf.Cell(0, 0, "Test")
+	pdf.Ln(10)
+	pdf.CellFormat(35, 8, "Bukti Pembayaran", "TB", 0, "L", false, 0, "")
+	pdf.CellFormat(35, 8, "Bukti Pembayaran 2", "TB", 0, "L", false, 0, "")
+	pdf.OutputFileAndClose("hello2.pdf")
+}
+
 func strDelimit(str string, sepstr string, sepcount int) string {
 	pos := len(str) - sepcount
 	for pos > 0 {
