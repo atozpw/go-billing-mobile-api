@@ -55,7 +55,7 @@ func Login(c *gin.Context) {
 
 	var user models.User
 
-	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket, a.device_id FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '002'", body.Username).Scan(&user)
+	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket, a.device_id FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '020'", body.Username).Scan(&user)
 
 	if user.KarId == "" {
 		c.JSON(http.StatusBadRequest, models.ResponseOnlyMessage{
@@ -108,7 +108,7 @@ func Login(c *gin.Context) {
 
 		randomCode := helpers.RandomCode(6)
 
-		configs.DB.Exec("UPDATE tm_karyawan SET device_id = ? WHERE kar_id = ? AND grup_id = '002'", randomCode, body.Username)
+		configs.DB.Exec("UPDATE tm_karyawan SET device_id = ? WHERE kar_id = ? AND grup_id = '020'", randomCode, body.Username)
 
 		c.JSON(http.StatusUnauthorized, models.ResponseWithData{
 			Code:    401,
@@ -164,7 +164,7 @@ func Register(c *gin.Context) {
 		KarId string
 	}
 
-	configs.DB.Raw("SELECT kar_id FROM tm_karyawan WHERE kar_id = ? AND grup_id = '002' AND device_id = ?", authSession, body.VerificationCode).Scan(&user)
+	configs.DB.Raw("SELECT kar_id FROM tm_karyawan WHERE kar_id = ? AND grup_id = '020' AND device_id = ?", authSession, body.VerificationCode).Scan(&user)
 
 	if user.KarId == "" {
 		c.JSON(http.StatusBadRequest, models.ResponseOnlyMessage{
@@ -174,7 +174,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	result := configs.DB.Exec("UPDATE tm_karyawan SET device_id = ? WHERE kar_id = ? AND grup_id = '002'", body.DeviceId, authSession)
+	result := configs.DB.Exec("UPDATE tm_karyawan SET device_id = ? WHERE kar_id = ? AND grup_id = '020'", body.DeviceId, authSession)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{

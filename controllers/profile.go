@@ -15,7 +15,7 @@ func Profile(c *gin.Context) {
 
 	var user models.User
 
-	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '002'", authSession).Scan(&user)
+	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '020'", authSession).Scan(&user)
 
 	var data struct {
 		ID    string `json:"id"`

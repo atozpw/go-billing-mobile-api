@@ -40,7 +40,7 @@ func Auth(c *gin.Context) {
 
 			var client models.User
 
-			configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '002'", claims["sub"]).Find(&client)
+			configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '020'", claims["sub"]).Find(&client)
 
 			if client.KarId == "" {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, models.ResponseOnlyMessage{

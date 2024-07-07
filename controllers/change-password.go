@@ -54,7 +54,7 @@ func ChangePassword(c *gin.Context) {
 
 	var user models.User
 
-	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '002'", authSession).Scan(&user)
+	configs.DB.Raw("SELECT a.kar_id, a.kar_nama, a.kar_pass, b.kp_ket FROM tm_karyawan a JOIN tr_kota_pelayanan b ON a.kp_kode = b.kp_kode WHERE a.kar_id = ? AND a.grup_id = '020'", authSession).Scan(&user)
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.KarPass), []byte(body.CurrentPassword))
 
@@ -84,7 +84,7 @@ func ChangePassword(c *gin.Context) {
 		return
 	}
 
-	result := configs.DB.Exec("UPDATE tm_karyawan SET kar_pass = ? WHERE kar_id = ? AND grup_id = '002'", string(hash), authSession)
+	result := configs.DB.Exec("UPDATE tm_karyawan SET kar_pass = ? WHERE kar_id = ? AND grup_id = '020'", string(hash), authSession)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
