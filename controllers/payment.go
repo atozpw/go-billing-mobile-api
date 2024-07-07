@@ -46,6 +46,55 @@ func PaymentIndex(c *gin.Context) {
 
 }
 
+func PaymentFind(c *gin.Context) {
+
+	authId := helpers.AuthSession(c.GetHeader("Authorization"))
+
+	var bills []struct {
+		RekNomor   string `json:"id"`
+		RekThn     string `json:"year"`
+		RekBln     string `json:"month"`
+		RekUangair string `json:"amount"`
+		RekAdm     string `json:"adminFee"`
+		RekMeter   string `json:"meterCost"`
+		RekDenda   string `json:"additionalAmount"`
+		RekLayanan string `json:"serviceFee"`
+		RekTotal   string `json:"total"`
+	}
+
+	configs.DB.Raw("SELECT a.rek_nomor, b.rek_thn, MONTHNAME(CONCAT(b.rek_thn, '-', b.rek_bln, '-1')) AS rek_bln, b.rek_uangair, b.rek_adm, b.rek_meter, b.rek_denda, 0 AS rek_layanan, b.rek_total FROM tm_pembayaran a JOIN tm_rekening b ON b.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0", c.Param("id"), authId).Scan(&bills)
+
+	var payment struct {
+		ByrNo     string      `json:"id"`
+		ByrTgl    string      `json:"trxDate"`
+		KarNama   string      `json:"cashier"`
+		PelNo     string      `json:"customerNo"`
+		PelNama   string      `json:"customerName"`
+		PelAlamat string      `json:"customerAddress"`
+		RekGol    string      `json:"customerGroup"`
+		Detail    interface{} `json:"billDetails"`
+	}
+
+	payment.Detail = bills
+
+	paymentResult := configs.DB.Raw("SELECT a.byr_no, DATE_FORMAT(a.byr_tgl, '%Y-%m-%d %H:%i:%s') AS byr_tgl, b.kar_nama, c.pel_no, c.pel_nama, c.pel_alamat, c.rek_gol FROM tm_pembayaran a JOIN tm_karyawan b ON b.kar_id = a.kar_id JOIN tm_rekening c ON c.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0 ORDER BY a.rek_nomor DESC LIMIT 1", c.Param("id"), authId).Scan(&payment)
+
+	if paymentResult.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, models.ResponseWithData{
+			Code:    404,
+			Message: "Data tidak ditemukan",
+			Data:    []int{},
+		})
+	} else {
+		c.JSON(http.StatusOK, models.ResponseWithData{
+			Code:    200,
+			Message: "Data Pembayaran",
+			Data:    payment,
+		})
+	}
+
+}
+
 func PaymentStore(c *gin.Context) {
 
 	type Bill struct {
