@@ -12,7 +12,7 @@ compiledaemon --command="./go-billing-mobile-api"
 
 ```bash
 docker build -t go-billing-mobile-api .
-docker container create --name go-billing-mobile-api_1 -p 7720:7720 go-billing-mobile-api
+docker container create --name go-billing-mobile-api_1 --volume /home/tira/go-billing-mobile-api/storages/public:/app/storages/public --volume /home/tira/go-billing-mobile-api/storages/logs:/app/storages/logs -p 7720:7720 go-billing-mobile-api
 docker start go-billing-mobile-api_1
 ```
 
