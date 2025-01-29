@@ -90,7 +90,7 @@ func CustomerBills(c *gin.Context) {
 		RekTotal    string `json:"total"`
 	}
 
-	result := configs.DB.Raw("SELECT rek_nomor, rek_thn, MONTHNAME(CONCAT(rek_thn, '-', rek_bln, '-1')) as rek_bln, rek_stanlalu, rek_stankini, (rek_stankini - rek_stanlalu) AS rek_pakai, rek_uangair, rek_adm, rek_meter, getDenda(rek_total, rek_bln, rek_thn) AS rek_denda, (getDenda(rek_total, rek_bln, rek_thn) + rek_total) AS rek_total FROM tm_rekening WHERE pel_no = ? AND rek_sts = 1 AND rek_byr_sts = 0", c.Param("id")).Scan(&bills)
+	result := configs.DB.Raw("SELECT rek_nomor, rek_thn, MONTHNAME_ID(rek_bln) as rek_bln, rek_stanlalu, rek_stankini, (rek_stankini - rek_stanlalu) AS rek_pakai, rek_uangair, rek_adm, rek_meter, getDenda(rek_total, rek_bln, rek_thn) AS rek_denda, (getDenda(rek_total, rek_bln, rek_thn) + rek_total) AS rek_total FROM tm_rekening WHERE pel_no = ? AND rek_sts = 1 AND rek_byr_sts = 0", c.Param("id")).Scan(&bills)
 
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, models.ResponseWithData{

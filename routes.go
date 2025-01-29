@@ -22,8 +22,6 @@ func Routes(router *gin.Engine) {
 		v1.GET("/profile", middlewares.Auth, controllers.Profile)
 		v1.POST("/change-password", middlewares.Auth, controllers.ChangePassword)
 		v1.POST("/receipt/whatsapp", middlewares.Auth, controllers.ReceiptToWhatsapp)
-		v1.GET("/test/pdf", controllers.TestPdf)
-		v1.GET("/test/receipt", controllers.TestReceipt)
 		v1.Static("/storage", "./storages/public")
 	}
 

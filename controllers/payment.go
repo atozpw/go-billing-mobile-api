@@ -158,7 +158,7 @@ func PaymentStore(c *gin.Context) {
 			return
 		}
 
-		bill := tx.Exec("UPDATE tm_rekening SET rek_byr_sts = 1 WHERE rek_nomor = ? AND rek_sts = 1 AND rek_byr_sts = 0", body.Bills[i].Id)
+		bill := tx.Exec("UPDATE tm_rekening SET rek_denda = getDenda(rek_total, rek_bln, rek_thn), rek_byr_sts = 1 WHERE rek_nomor = ? AND rek_sts = 1 AND rek_byr_sts = 0", body.Bills[i].Id)
 
 		if bill.Error != nil {
 			tx.Rollback()
@@ -185,6 +185,10 @@ func PaymentStore(c *gin.Context) {
 	}
 
 	tx.Commit()
+
+	for i := 0; i < len(body.Bills); i++ {
+		helpers.GenerateReceipt(body.Bills[i].Id)
+	}
 
 	c.JSON(http.StatusOK, models.ResponseWithData{
 		Code:    200,
