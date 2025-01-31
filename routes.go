@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/atozpw/go-billing-mobile-api/controllers"
 	"github.com/atozpw/go-billing-mobile-api/exceptions"
 	"github.com/atozpw/go-billing-mobile-api/middlewares"
@@ -22,7 +24,7 @@ func Routes(router *gin.Engine) {
 		v1.GET("/profile", middlewares.Auth, controllers.Profile)
 		v1.POST("/change-password", middlewares.Auth, controllers.ChangePassword)
 		v1.POST("/receipt/whatsapp", middlewares.Auth, controllers.ReceiptToWhatsapp)
-		v1.Static("/storage", "./storages/public")
+		v1.StaticFS("/storage", http.Dir("./storages/public"))
 	}
 
 	router.NoRoute(exceptions.RouteException)
