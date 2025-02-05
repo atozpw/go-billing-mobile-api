@@ -17,7 +17,10 @@ func PaymentIndex(c *gin.Context) {
 
 	var payments []struct {
 		ByrNo      string `json:"id"`
+		PelNo      string `json:"customerNo"`
+		PelNama    string `json:"customerName"`
 		ByrTgl     string `json:"trxDate"`
+		ByrJam     string `json:"trxTime"`
 		RekThn     string `json:"billYear"`
 		RekBln     string `json:"billMonth"`
 		RekPakai   string `json:"waterUsage"`
@@ -28,7 +31,7 @@ func PaymentIndex(c *gin.Context) {
 		ByrTotal   string `json:"trxTotal"`
 	}
 
-	result := configs.DB.Raw("SELECT b.byr_no, DATE_FORMAT(b.byr_tgl, '%Y-%m-%d %H:%i:%s') AS byr_tgl, a.rek_thn, MONTHNAME(CONCAT(a.rek_thn, '-', a.rek_bln, '-1')) as rek_bln, (a.rek_stankini - a.rek_stanlalu) AS rek_pakai, a.rek_uangair, a.rek_adm, a.rek_meter, a.rek_denda, b.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE DATE_FORMAT(b.byr_tgl, '%Y-%m-%d') = ? AND b.kar_id = ? AND b.byr_sts > 0 ORDER BY b.byr_tgl", date, authId).Scan(&payments)
+	result := configs.DB.Raw("SELECT b.byr_no, a.pel_no, a.pel_nama, DATE_FORMAT(b.byr_tgl, '%Y-%m-%d') AS byr_tgl, DATE_FORMAT(b.byr_tgl, '%H:%i:%s') AS byr_jam, a.rek_thn, MONTHNAME_ID(a.rek_bln) as rek_bln, (a.rek_stankini - a.rek_stanlalu) AS rek_pakai, a.rek_uangair, a.rek_adm, a.rek_meter, a.rek_denda, b.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE DATE_FORMAT(b.byr_tgl, '%Y-%m-%d') = ? AND b.kar_id = ? AND b.byr_sts > 0 ORDER BY b.byr_tgl", date, authId).Scan(&payments)
 
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, models.ResponseWithData{
