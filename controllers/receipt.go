@@ -41,19 +41,18 @@ func ReceiptToWhatsapp(c *gin.Context) {
 	var bills []struct {
 		RekNomor  string
 		RekPeriod string
+		ByrTotal  string
 	}
 
-	configs.DB.Raw("SELECT a.pel_no, a.pel_nama, CONCAT(DATE_FORMAT(b.byr_tgl, '%e'), ' ', MONTHNAME_ID(DATE_FORMAT(b.byr_tgl, '%c')), ' ', DATE_FORMAT(b.byr_tgl, '%Y')) AS byr_tgl, SUM(b.byr_total) + 4000 AS byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0 GROUP BY b.byr_no", body.TrxId).Scan(&customer)
+	configs.DB.Raw("SELECT a.pel_no, a.pel_nama, CONCAT(DAY(b.byr_tgl), ' ', MONTHNAME_ID(MONTH(b.byr_tgl)), ' ', YEAR(b.byr_tgl)) AS byr_tgl, SUM(b.byr_total) + 5000 AS byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0 GROUP BY b.byr_no", body.TrxId).Scan(&customer)
 
-	configs.DB.Raw("SELECT a.rek_nomor, CONCAT(MONTHNAME_ID(a.rek_bln), ' ', a.rek_thn) AS rek_period FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0", body.TrxId).Scan(&bills)
+	configs.DB.Raw("SELECT a.rek_nomor, CONCAT(MONTHNAME_ID(a.rek_bln), ' ', a.rek_thn) AS rek_period, b.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0", body.TrxId).Scan(&bills)
 
 	billPeriod := ""
 
 	for i := 0; i < len(bills); i++ {
-		if i > 0 {
-			billPeriod += ", "
-		}
-		billPeriod += bills[i].RekPeriod
+		strToIntTotal, _ := strconv.Atoi(bills[i].ByrTotal)
+		billPeriod += bills[i].RekPeriod + ": Rp" + helpers.CurrencyFormat(strToIntTotal) + "\n"
 	}
 
 	strToIntTotal, _ := strconv.Atoi(customer.ByrTotal)
@@ -69,7 +68,7 @@ func ReceiptToWhatsapp(c *gin.Context) {
 		WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+bills[i].RekNomor+".pdf", "INV-"+bills[i].RekNomor+".pdf")
 	}
 
-	c.JSON(http.StatusOK, models.ResponseWithData{
+	c.JSON(http.StatusOK, models.ResponseOnlyMessage{
 		Code:    200,
 		Message: "Bukti pembayaran berhasil terkirim",
 	})
@@ -81,10 +80,19 @@ func WhatsappSendText(number string, customerNo string, customerName string, bil
 	url := os.Getenv("WHATSAPP_ENDPOINT") + "/send-text"
 	method := "POST"
 
+	message := "Pelanggan Yth.\n"
+	message += "Terima kasih telah melakukan pembayaran rekening air.\n"
+	message += "Pada tanggal " + trxDate + ".\n"
+	message += "Untuk nomor pelanggan " + customerNo + ", atas nama " + customerName + ".\n\n"
+	message += "Dengan rincian:\n"
+	message += billPeriod
+	message += "Biaya Layanan: Rp5,000\n"
+	message += "Total Pembayaran: Rp" + trxAmount
+
 	payload := &bytes.Buffer{}
 	writer := multipart.NewWriter(payload)
 	_ = writer.WriteField("number", number)
-	_ = writer.WriteField("message", "Pelanggan Yth.\nTerima kasih telah melakukan pembayaran rekening air.\nPada tanggal "+trxDate+".\nUntuk nomor pelanggan "+customerNo+", atas nama "+customerName+".\nPeriode "+billPeriod+".\nDengan total pembayaran sebesar Rp"+trxAmount+".")
+	_ = writer.WriteField("message", message)
 	err := writer.Close()
 
 	if err != nil {
