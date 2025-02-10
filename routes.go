@@ -18,6 +18,8 @@ func Routes(router *gin.Engine) {
 		v1.GET("/customers", middlewares.Auth, controllers.CustomerIndex)
 		v1.GET("/customers/:id", middlewares.Auth, controllers.CustomerFind)
 		v1.GET("/customers/:id/bills", middlewares.Auth, controllers.CustomerBills)
+		v1.GET("/bills", middlewares.Auth, controllers.BillIndex)
+		v1.GET("/bills/:id", middlewares.Auth, controllers.BillFind)
 		v1.GET("/payments", middlewares.Auth, controllers.PaymentIndex)
 		v1.GET("/payments/:id", middlewares.Auth, controllers.PaymentFind)
 		v1.POST("/payments", middlewares.Auth, controllers.PaymentStore)
