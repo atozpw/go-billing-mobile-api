@@ -65,7 +65,7 @@ func PaymentFind(c *gin.Context) {
 		RekTotal   string `json:"total"`
 	}
 
-	configs.DB.Raw("SELECT a.rek_nomor, b.rek_thn, MONTHNAME(CONCAT(b.rek_thn, '-', b.rek_bln, '-1')) AS rek_bln, b.rek_uangair, b.rek_adm, b.rek_meter, b.rek_denda, 0 AS rek_layanan, b.rek_total FROM tm_pembayaran a JOIN tm_rekening b ON b.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0", c.Param("id"), authId).Scan(&bills)
+	configs.DB.Raw("SELECT a.rek_nomor, b.rek_thn, MONTHNAME_ID(b.rek_thn) AS rek_bln, b.rek_uangair, b.rek_adm, b.rek_meter, b.rek_denda, 0 AS rek_layanan, (b.rek_denda + b.rek_total) AS rek_total FROM tm_pembayaran a JOIN tm_rekening b ON b.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0", c.Param("id"), authId).Scan(&bills)
 
 	var payment struct {
 		ByrNo     string      `json:"id"`
