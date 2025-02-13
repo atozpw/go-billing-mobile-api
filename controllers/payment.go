@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/atozpw/go-billing-mobile-api/configs"
@@ -54,18 +55,21 @@ func PaymentFind(c *gin.Context) {
 	authId := helpers.AuthSession(c.GetHeader("Authorization"))
 
 	var bills []struct {
-		RekNomor   string `json:"id"`
-		RekThn     string `json:"year"`
-		RekBln     string `json:"month"`
-		RekUangair string `json:"amount"`
-		RekAdm     string `json:"adminFee"`
-		RekMeter   string `json:"meterCost"`
-		RekDenda   string `json:"additionalAmount"`
-		RekLayanan string `json:"serviceFee"`
-		RekTotal   string `json:"total"`
+		RekNomor    string `json:"id"`
+		RekThn      string `json:"year"`
+		RekBln      string `json:"month"`
+		RekStanlalu string `json:"lastWm"`
+		RekStankini string `json:"currentWm"`
+		RekPakai    string `json:"waterUsage"`
+		RekUangair  string `json:"amount"`
+		RekAdm      string `json:"adminFee"`
+		RekMeter    string `json:"meterCost"`
+		RekDenda    string `json:"additionalAmount"`
+		RekLayanan  string `json:"serviceFee"`
+		RekTotal    string `json:"total"`
 	}
 
-	configs.DB.Raw("SELECT a.rek_nomor, b.rek_thn, MONTHNAME_ID(b.rek_bln) AS rek_bln, b.rek_uangair, b.rek_adm, b.rek_meter, b.rek_denda, 0 AS rek_layanan, (b.rek_denda + b.rek_total) AS rek_total FROM tm_pembayaran a JOIN tm_rekening b ON b.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0", c.Param("id"), authId).Scan(&bills)
+	configs.DB.Raw("SELECT a.rek_nomor, b.rek_thn, MONTHNAME_ID(b.rek_bln) AS rek_bln, b.rek_stanlalu, b.rek_stankini, (b.rek_stankini - b.rek_stanlalu) AS rek_pakai, b.rek_uangair, b.rek_adm, b.rek_meter, b.rek_denda, 0 AS rek_layanan, (b.rek_denda + b.rek_total) AS rek_total FROM tm_pembayaran a JOIN tm_rekening b ON b.rek_nomor = a.rek_nomor WHERE a.byr_no = ? AND a.kar_id = ? AND a.byr_sts > 0", c.Param("id"), authId).Scan(&bills)
 
 	var payment struct {
 		ByrNo     string      `json:"id"`
@@ -129,7 +133,12 @@ func PaymentStore(c *gin.Context) {
 		SysValue1 int
 	}
 
+	var serviceFee struct {
+		SysValue int
+	}
+
 	configs.DB.Raw("SELECT sys_value1 FROM system_parameter WHERE sys_param = 'RESI' AND sys_value = ?", authId).Scan(&sysParam)
+	configs.DB.Raw("SELECT sys_value FROM system_parameter WHERE sys_param = 'LAYANAN'").Scan(&serviceFee)
 
 	trxDate := time.Now().Format("2006-01-02 15:04:05")
 	clientIp := c.ClientIP()
@@ -190,7 +199,9 @@ func PaymentStore(c *gin.Context) {
 		return
 	}
 
-	additional := tx.Exec("INSERT INTO tm_bayar_mobile (byr_no, byr_tgl, kar_id, rek_total, byr_adm, byr_total, byr_dibayar, byr_kembali, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, authId, body.Amount, body.Fee, body.Total, body.Paid, body.Change, 1)
+	strToIntAmount, _ := strconv.Atoi(body.Amount)
+
+	additional := tx.Exec("INSERT INTO tm_bayar_mobile (byr_no, byr_tgl, kar_id, rek_total, byr_adm, byr_total, byr_dibayar, byr_kembali, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, authId, body.Amount, serviceFee.SysValue, strToIntAmount+serviceFee.SysValue, body.Paid, body.Change, 1)
 
 	if additional.Error != nil {
 		tx.Rollback()
