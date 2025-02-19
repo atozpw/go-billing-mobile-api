@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/atozpw/go-billing-mobile-api/configs"
@@ -133,12 +132,7 @@ func PaymentStore(c *gin.Context) {
 		SysValue1 int
 	}
 
-	var serviceFee struct {
-		SysValue int
-	}
-
 	configs.DB.Raw("SELECT sys_value1 FROM system_parameter WHERE sys_param = 'RESI' AND sys_value = ?", authId).Scan(&sysParam)
-	configs.DB.Raw("SELECT sys_value FROM system_parameter WHERE sys_param = 'LAYANAN'").Scan(&serviceFee)
 
 	trxDate := time.Now().Format("2006-01-02 15:04:05")
 	clientIp := c.ClientIP()
@@ -199,11 +193,9 @@ func PaymentStore(c *gin.Context) {
 		return
 	}
 
-	strToIntAmount, _ := strconv.Atoi(body.Amount)
+	summary := tx.Exec("INSERT INTO tm_bayar_mobile (byr_no, byr_tgl, kar_id, rek_total, byr_adm, byr_total, byr_dibayar, byr_kembali, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, authId, body.Amount, body.Fee, body.Total, body.Paid, body.Change, 1)
 
-	additional := tx.Exec("INSERT INTO tm_bayar_mobile (byr_no, byr_tgl, kar_id, rek_total, byr_adm, byr_total, byr_dibayar, byr_kembali, byr_sts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", body.Id, trxDate, authId, body.Amount, serviceFee.SysValue, strToIntAmount+serviceFee.SysValue, body.Paid, body.Change, 1)
-
-	if additional.Error != nil {
+	if summary.Error != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, models.ResponseOnlyMessage{
 			Code:    500,
