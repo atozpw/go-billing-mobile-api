@@ -23,6 +23,7 @@ func Routes(router *gin.Engine) {
 		v1.GET("/payments", middlewares.Auth, controllers.PaymentIndex)
 		v1.GET("/payments/:id", middlewares.Auth, controllers.PaymentFind)
 		v1.POST("/payments", middlewares.Auth, controllers.PaymentStore)
+		v1.GET("/reports", middlewares.Auth, controllers.ReportIndex)
 		v1.GET("/profile", middlewares.Auth, controllers.Profile)
 		v1.POST("/change-password", middlewares.Auth, controllers.ChangePassword)
 		v1.POST("/receipt/whatsapp", middlewares.Auth, controllers.ReceiptToWhatsapp)
