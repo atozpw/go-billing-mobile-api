@@ -22,7 +22,7 @@ func ReportIndex(c *gin.Context) {
 		ByrTotal string `json:"trxTotal"`
 	}
 
-	result := configs.DB.Raw("SELECT b.byr_no, a.pel_no, a.pel_nama, DATE_FORMAT(b.byr_tgl, '%H:%i:%s') AS byr_jam, c.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor JOIN tm_bayar_mobile c ON c.byr_no = b.byr_no WHERE DATE_FORMAT(b.byr_tgl, '%Y-%m-%d') = ? AND b.kar_id = ? AND b.byr_sts > 0 GROUP BY a.pel_no ORDER BY b.byr_tgl DESC", date, authId).Scan(&reports)
+	result := configs.DB.Raw("SELECT b.byr_no, a.pel_no, a.pel_nama, DATE_FORMAT(b.byr_tgl, '%H:%i:%s') AS byr_jam, c.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor JOIN tm_bayar_mobile c ON c.byr_no = b.byr_no WHERE DATE_FORMAT(b.byr_tgl, '%Y-%m-%d') = ? AND b.kar_id = ? AND b.byr_sts > 0 GROUP BY b.byr_no ORDER BY b.byr_tgl DESC", date, authId).Scan(&reports)
 
 	if result.RowsAffected == 0 {
 		c.JSON(http.StatusNotFound, models.ResponseWithData{
