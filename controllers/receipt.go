@@ -44,7 +44,7 @@ func ReceiptToWhatsapp(c *gin.Context) {
 		ByrTotal  string
 	}
 
-	configs.DB.Raw("SELECT a.pel_no, a.pel_nama, CONCAT(DAY(b.byr_tgl), ' ', MONTHNAME_ID(MONTH(b.byr_tgl)), ' ', YEAR(b.byr_tgl)) AS byr_tgl, SUM(b.byr_total) + 5000 AS byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0 GROUP BY b.byr_no", body.TrxId).Scan(&customer)
+	configs.DB.Raw("SELECT a.pel_no, a.pel_nama, CONCAT(DAY(b.byr_tgl), ' ', MONTHNAME_ID(MONTH(b.byr_tgl)), ' ', YEAR(b.byr_tgl)) AS byr_tgl, SUM(b.byr_total) + 1500 AS byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0 GROUP BY b.byr_no", body.TrxId).Scan(&customer)
 
 	configs.DB.Raw("SELECT a.rek_nomor, CONCAT(MONTHNAME_ID(a.rek_bln), ' ', a.rek_thn) AS rek_period, b.byr_total FROM tm_rekening a JOIN tm_pembayaran b ON b.rek_nomor = a.rek_nomor WHERE b.byr_no = ? AND b.byr_sts > 0", body.TrxId).Scan(&bills)
 
@@ -86,7 +86,7 @@ func WhatsappSendText(number string, customerNo string, customerName string, bil
 	message += "Untuk nomor pelanggan " + customerNo + ", atas nama " + customerName + ".\n\n"
 	message += "Dengan rincian:\n"
 	message += billPeriod
-	message += "Biaya Layanan: Rp5,000\n"
+	message += "Biaya Layanan: Rp1,500\n"
 	message += "Total Pembayaran: Rp" + trxAmount
 
 	payload := &bytes.Buffer{}

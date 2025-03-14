@@ -207,7 +207,7 @@ func PaymentStore(c *gin.Context) {
 	tx.Commit()
 
 	for i := 0; i < len(body.Bills); i++ {
-		helpers.GenerateReceipt(body.Bills[i].Id)
+		helpers.GenerateReceiptTirtaDeli(body.Bills[i].Id)
 	}
 
 	c.JSON(http.StatusOK, models.ResponseWithData{
