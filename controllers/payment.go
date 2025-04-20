@@ -206,9 +206,11 @@ func PaymentStore(c *gin.Context) {
 
 	tx.Commit()
 
-	for i := 0; i < len(body.Bills); i++ {
-		helpers.GenerateReceiptTirtaDeli(body.Bills[i].Id)
-	}
+	// for i := 0; i < len(body.Bills); i++ {
+	// 	helpers.GenerateReceiptTirtaDeli(body.Bills[i].Id)
+	// }
+
+	helpers.GenerateReceiptTirtaDeliSmall(body.Id)
 
 	c.JSON(http.StatusOK, models.ResponseWithData{
 		Code:    200,

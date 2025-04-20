@@ -61,12 +61,14 @@ func ReceiptToWhatsapp(c *gin.Context) {
 
 	time.After(time.Second * 4)
 
-	for i := 0; i < len(bills); i++ {
-		if i > 0 {
-			time.After(time.Second * 4)
-		}
-		WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+bills[i].RekNomor+".pdf", "INV-"+bills[i].RekNomor+".pdf")
-	}
+	// for i := 0; i < len(bills); i++ {
+	// 	if i > 0 {
+	// 		time.After(time.Second * 4)
+	// 	}
+	// 	WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+bills[i].RekNomor+".pdf", "INV-"+bills[i].RekNomor+".pdf")
+	// }
+
+	WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
 
 	c.JSON(http.StatusOK, models.ResponseOnlyMessage{
 		Code:    200,
