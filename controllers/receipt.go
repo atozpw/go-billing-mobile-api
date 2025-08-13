@@ -70,6 +70,8 @@ func ReceiptToWhatsapp(c *gin.Context) {
 
 	WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
 
+	WahaBroadcast(body.Number, customer.PelNo, customer.PelNama, billPeriod, customer.ByrTgl, helpers.CurrencyFormat(strToIntTotal), os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
+
 	c.JSON(http.StatusOK, models.ResponseOnlyMessage{
 		Code:    200,
 		Message: "Bukti pembayaran berhasil terkirim",
@@ -174,5 +176,20 @@ func WhatsappSendFile(number string, file string, filename string) {
 	}
 
 	fmt.Println(string(body))
+
+}
+
+func WahaBroadcast(number string, customerNo string, customerName string, billPeriod string, trxDate string, trxAmount string, file string, filename string) {
+
+	message := "Pelanggan Yth.\n"
+	message += "Terima kasih telah melakukan pembayaran rekening air.\n"
+	message += "Pada tanggal " + trxDate + ".\n"
+	message += "Untuk nomor pelanggan " + customerNo + ", atas nama " + customerName + ".\n\n"
+	message += "Dengan rincian:\n"
+	message += billPeriod
+	message += "Biaya Layanan: Rp1,500\n"
+	message += "Total Pembayaran: Rp" + trxAmount
+
+	configs.DB.Exec("INSERT INTO wa_broadcasts (customer_no, number, message, file, filename, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())", customerNo, number, message, file, filename)
 
 }
