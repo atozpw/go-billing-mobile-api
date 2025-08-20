@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/atozpw/go-billing-mobile-api/configs"
 	"github.com/atozpw/go-billing-mobile-api/helpers"
@@ -57,9 +56,9 @@ func ReceiptToWhatsapp(c *gin.Context) {
 
 	strToIntTotal, _ := strconv.Atoi(customer.ByrTotal)
 
-	WhatsappSendText(body.Number, customer.PelNo, customer.PelNama, billPeriod, customer.ByrTgl, helpers.CurrencyFormat(strToIntTotal))
+	// WhatsappSendText(body.Number, customer.PelNo, customer.PelNama, billPeriod, customer.ByrTgl, helpers.CurrencyFormat(strToIntTotal))
 
-	time.After(time.Second * 4)
+	// time.After(time.Second * 4)
 
 	// for i := 0; i < len(bills); i++ {
 	// 	if i > 0 {
@@ -68,7 +67,7 @@ func ReceiptToWhatsapp(c *gin.Context) {
 	// 	WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+bills[i].RekNomor+".pdf", "INV-"+bills[i].RekNomor+".pdf")
 	// }
 
-	WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
+	// WhatsappSendFile(body.Number, os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
 
 	WahaBroadcast(body.Number, customer.PelNo, customer.PelNama, billPeriod, customer.ByrTgl, helpers.CurrencyFormat(strToIntTotal), os.Getenv("STORAGE_URL_PATH")+"/INV-"+body.TrxId+".pdf", "INV-"+body.TrxId+".pdf")
 
